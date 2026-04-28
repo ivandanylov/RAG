@@ -1,5 +1,5 @@
 [project]
-name = "rag"
+name = "local-dev-rag"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -18,9 +18,8 @@ dependencies = [
 ]
 
 [project.scripts]
-rag = "rag:main"
 rag-init = "local_dev_rag.qdrant_admin:ensure_collections"
-rag-index = "local_dev_rag.indexer:index_all_projects"
+rag-index = "local_dev_rag.indexer:main"
 rag-watch = "local_dev_rag.watcher:main"
 rag-mcp = "local_dev_rag.server:mcp.run"
 
