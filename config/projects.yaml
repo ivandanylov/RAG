@@ -1,0 +1,58 @@
+projects:
+  - project_id: customui
+    project_name: CustomUI
+    workspace_path: /mnt/linux-data/Projects/CustomUI/
+    tags:
+      - fastapi
+      - react
+      - typescript
+      - postgresql
+      - redis
+      - docker
+    docs:
+      include:
+        - docs/**/*.md
+        - docs/**/*.json
+        - infra/**/*.md
+        - ops/**/*.md
+        - apps/**/openapi*.json
+      exclude:
+        - "**/.env*"
+        - "**/secrets/**"
+        - "**/node_modules/**"
+        - "**/.git/**"
+    code:
+      include:
+        - apps/**/*.py
+        - apps/**/*.ts
+        - apps/**/*.tsx
+        - apps/**/*.sql
+        - apps/**/*.css
+        - apps/**/*.scss
+      exclude:
+        - "**/.env*"
+        - "**/node_modules/**"
+        - "**/.venv/**"
+        - "**/__pycache__/**"
+        - "**/dist/**"
+        - "**/build/**"
+        - "**/.git/**"
+
+  - project_id: _global
+    project_name: Global Engineering Knowledge
+    workspace_path: /mnt/linux-data/Projects/GlobalKnowledge/
+    tags:
+      - architecture
+      - fastapi
+      - react
+      - docker
+      - testing
+    docs:
+      include:
+        - "**/*.md"
+      exclude:
+        - "**/.env*"
+        - "**/secrets/**"
+    code:
+      include: []
+      exclude: []

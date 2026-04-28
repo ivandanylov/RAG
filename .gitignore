@@ -1,0 +1,80 @@
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python build artifacts
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# uv
+# Keep uv.lock committed for reproducible installs
+# uv.lock
+
+# Test/cache/type-check tools
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.tox/
+.nox/
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+config/secrets/
+**/secrets/
+
+# Qdrant/local persistent data
+data/qdrant/
+data/
+raft_state.json
+
+# Logs/runtime
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# IDE/editor
+.vscode/
+.idea/
+*.code-workspace
+.cursor/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker local overrides
+docker-compose.override.yml
+compose.override.yml
+
+# Node artifacts if repo later gets UI/tools
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

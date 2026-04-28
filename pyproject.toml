@@ -1,0 +1,34 @@
+[project]
+name = "rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Ivan Danylov", email = "prg.ivandanylov@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastmcp>=3.2.4",
+    "openai>=2.32.0",
+    "pydantic>=2.13.3",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+    "qdrant-client>=1.17.1",
+    "watchfiles>=1.1.1",
+]
+
+[project.scripts]
+rag = "rag:main"
+rag-init = "local_dev_rag.qdrant_admin:ensure_collections"
+rag-index = "local_dev_rag.indexer:index_all_projects"
+rag-watch = "local_dev_rag.watcher:main"
+rag-mcp = "local_dev_rag.server:mcp.run"
+
+[build-system]
+requires = ["uv_build>=0.11.8,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
