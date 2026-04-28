@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import FastMCP
-from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue, should
+from qdrant_client.models import FieldCondition, Filter, MatchValue
 
 from local_dev_rag.embeddings import embed_text
 from local_dev_rag.qdrant_admin import get_qdrant_client
@@ -31,8 +31,6 @@ def project_filter(
             FieldCondition(key="reusable_scope", match=MatchValue(value="global"))
         )
 
-    must.append(should(should_conditions))
-
     if knowledge_type:
         must.append(FieldCondition(key="knowledge_type", match=MatchValue(value=knowledge_type)))
 
@@ -42,7 +40,11 @@ def project_filter(
     if module:
         must.append(FieldCondition(key="module", match=MatchValue(value=module)))
 
-    return Filter(must=must)
+    return Filter(
+        must=must,
+        should=should_conditions,
+        min_should=1,
+    )
 
 
 @mcp.tool
