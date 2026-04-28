@@ -14,9 +14,9 @@ def test_project_docs_search_returns_results(
         "architecture FastAPI React PostgreSQL Redis Docker",
     )
 
-    results = qdrant_client.search(
+    results = qdrant_client.query_points(
         collection_name=docs_collection,
-        query_vector=vector,
+        query=vector,
         query_filter=Filter(
             must=[
                 FieldCondition(
@@ -27,7 +27,7 @@ def test_project_docs_search_returns_results(
         ),
         limit=5,
         with_payload=True,
-    )
+    ).points
 
     assert results
 
@@ -48,9 +48,9 @@ def test_project_code_search_returns_results(
         "backend FastAPI router service application initialization",
     )
 
-    results = qdrant_client.search(
+    results = qdrant_client.query_points(
         collection_name=code_collection,
-        query_vector=vector,
+        query=vector,
         query_filter=Filter(
             must=[
                 FieldCondition(
@@ -61,7 +61,7 @@ def test_project_code_search_returns_results(
         ),
         limit=5,
         with_payload=True,
-    )
+    ).points
 
     assert results
 
@@ -82,9 +82,9 @@ def test_code_search_backend_python_filter(
         "FastAPI backend python router service",
     )
 
-    results = qdrant_client.search(
+    results = qdrant_client.query_points(
         collection_name=code_collection,
-        query_vector=vector,
+        query=vector,
         query_filter=Filter(
             must=[
                 FieldCondition(key="project_id", match=MatchValue(value=test_project_id)),
@@ -94,7 +94,7 @@ def test_code_search_backend_python_filter(
         ),
         limit=5,
         with_payload=True,
-    )
+    ).points
 
     assert results
 

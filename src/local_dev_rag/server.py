@@ -73,9 +73,9 @@ def search_project_docs(
     client = get_qdrant_client()
     vector = embed_text(query)
 
-    results = client.search(
+    results = client.query_points(
         collection_name=settings.docs_collection,
-        query_vector=vector,
+        query=vector,
         query_filter=project_filter(
             project_id=project_id,
             knowledge_type="docs",
@@ -83,7 +83,7 @@ def search_project_docs(
         ),
         limit=top_k,
         with_payload=True,
-    )
+    ).points
 
     return [
         {
@@ -112,9 +112,9 @@ def search_project_code(
     client = get_qdrant_client()
     vector = embed_text(query)
 
-    results = client.search(
+    results = client.query_points(
         collection_name=settings.code_collection,
-        query_vector=vector,
+        query=vector,
         query_filter=project_filter(
             project_id=project_id,
             knowledge_type="code",
@@ -124,7 +124,7 @@ def search_project_code(
         ),
         limit=top_k,
         with_payload=True,
-    )
+    ).points
 
     return [
         {
