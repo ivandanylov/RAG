@@ -1,3 +1,5 @@
+import pytest
+
 from qdrant_client.models import FieldCondition, Filter, MatchValue
 
 from conftest import embed
@@ -37,6 +39,7 @@ def test_project_docs_search_returns_results(
     assert "content" in payload
 
 
+@pytest.mark.code
 def test_project_code_search_returns_results(
     qdrant_client,
     embedding_client,
@@ -71,6 +74,7 @@ def test_project_code_search_returns_results(
     assert "content" in payload
 
 
+@pytest.mark.code
 def test_code_search_backend_python_filter(
     qdrant_client,
     embedding_client,

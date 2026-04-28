@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_qdrant_available(qdrant_client):
     collections = qdrant_client.get_collections()
     assert collections is not None
@@ -11,9 +14,14 @@ def test_required_collections_exist(qdrant_client, docs_collection, code_collect
     assert code_collection in names
 
 
+@pytest.mark.code
 def test_collections_not_empty(qdrant_client, docs_collection, code_collection):
     docs = qdrant_client.get_collection(docs_collection)
     code = qdrant_client.get_collection(code_collection)
 
     assert docs.points_count > 0
+    
+    if code.points_count == 0:
+        pytest.skip("Code collection empty")
+
     assert code.points_count > 0

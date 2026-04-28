@@ -1,3 +1,6 @@
+import pytest
+
+
 REQUIRED_FIELDS = {
     "project_id",
     "project_name",
@@ -28,6 +31,7 @@ def test_docs_payload_required_fields(qdrant_client, docs_collection):
         assert not missing, f"Missing docs payload fields: {missing}"
 
 
+@pytest.mark.code
 def test_code_payload_required_fields(qdrant_client, code_collection):
     records, _ = qdrant_client.scroll(
         collection_name=code_collection,

@@ -1,3 +1,5 @@
+import pytest
+
 from local_dev_rag.server import (
     list_rag_projects,
     search_project_code,
@@ -29,6 +31,7 @@ def test_mcp_docs_search(test_project_id):
     assert "content" in first
 
 
+@pytest.mark.code
 def test_mcp_code_search(test_project_id):
     results = search_project_code(
         query="FastAPI router backend service",

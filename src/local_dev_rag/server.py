@@ -20,16 +20,9 @@ def project_filter(
     language: str | None = None,
     module: str | None = None,
 ) -> Filter:
-    must = []
-
-    should_conditions = [
-        FieldCondition(key="project_id", match=MatchValue(value=project_id)),
+    must = [
+        FieldCondition(key="project_id", match=MatchValue(value=project_id))
     ]
-
-    if include_global:
-        should_conditions.append(
-            FieldCondition(key="reusable_scope", match=MatchValue(value="global"))
-        )
 
     if knowledge_type:
         must.append(FieldCondition(key="knowledge_type", match=MatchValue(value=knowledge_type)))
@@ -40,11 +33,7 @@ def project_filter(
     if module:
         must.append(FieldCondition(key="module", match=MatchValue(value=module)))
 
-    return Filter(
-        must=must,
-        should=should_conditions,
-        min_should=1,
-    )
+    return Filter(must=must)
 
 
 @mcp.tool

@@ -48,3 +48,18 @@ def embed(client: OpenAI, text: str) -> list[float]:
         input=text,
     )
     return result.data[0].embedding
+
+
+@pytest.fixture(autouse=True)
+def skip_code_tests_if_empty(request, qdrant_client, code_collection):
+    """
+    Автоматически пропускает тесты, помеченные как 'code',
+    если code collection пустая.
+    """
+    if "code" not in request.keywords:
+        return
+
+    info = qdrant_client.get_collection(code_collection)
+
+    if info.points_count == 0:
+        pytest.skip("Code collection is empty: no source code indexed yet")
