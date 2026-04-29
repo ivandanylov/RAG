@@ -35,6 +35,11 @@ class Settings(BaseModel):
     embedding_api_key: str
     embedding_model: str
     projects_config: Path
+    enable_rerank: bool = Field(default=True)
+    retrieval_top_k: int = 30
+    rerank_top_k: int = 6
+    rerank_threshold: float = 0.5
+    rerank_cache_dir: str = ".cache/fastembed"
 
 
 def get_settings() -> Settings:
@@ -47,6 +52,9 @@ def get_settings() -> Settings:
         embedding_api_key=os.getenv("EMBEDDING_API_KEY", "lm-studio"),
         embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-nomic-embed-text-v1.5"),
         projects_config=Path(os.getenv("PROJECTS_CONFIG", "./config/projects.yaml")),
+        enable_rerank = os.getenv("ENABLE_RERANK", "true").lower() == "true",
+        rerank_threshold=float(os.getenv("RERANK_THRESHOLD", "0.5")),
+        rerank_cache_dir=os.getenv("RERANK_CACHE_DIR", ".cache/fastembed"),
     )
 
 

@@ -88,3 +88,48 @@ def chunk_code(text: str, max_lines: int = 80, overlap: int = 15) -> list[dict]:
         start = max(0, end - overlap)
 
     return chunks
+
+
+def chunk_markdown_by_headings(text: str) -> list[dict]:
+    lines = text.splitlines()
+    chunks = []
+    current_heading = []
+    current_lines = []
+    start_line = 1
+
+    def flush(end_line: int):
+        if not current_lines:
+            return
+
+        content = "\n".join(current_lines).strip()
+        if not content:
+            return
+
+        chunks.append(
+            {
+                "content": content,
+                "heading_path": " > ".join(current_heading),
+                "chunk_type": "markdown_section",
+                "start_line": start_line,
+                "end_line": end_line,
+            }
+        )
+
+    for index, line in enumerate(lines, start=1):
+        if line.startswith("#"):
+            flush(index - 1)
+
+            level = len(line) - len(line.lstrip("#"))
+            heading = line.lstrip("#").strip()
+
+            current_heading[:] = current_heading[: level - 1]
+            current_heading.append(heading)
+
+            current_lines.clear()
+            current_lines.append(line)
+            start_line = index
+        else:
+            current_lines.append(line)
+
+    flush(len(lines))
+    return chunks

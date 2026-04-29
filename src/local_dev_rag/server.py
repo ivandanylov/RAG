@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
 
 from fastmcp import FastMCP
 from qdrant_client.models import FieldCondition, Filter, MatchValue
@@ -9,8 +10,12 @@ from local_dev_rag.embeddings import embed_text
 from local_dev_rag.qdrant_admin import get_qdrant_client
 from local_dev_rag.settings import get_settings, load_projects
 
+from fastembed.rerank.cross_encoder import TextCrossEncoder
+
 
 mcp = FastMCP("local-dev-rag")
+
+_reranker = None
 
 
 def project_filter(
@@ -34,6 +39,54 @@ def project_filter(
         must.append(FieldCondition(key="module", match=MatchValue(value=module)))
 
     return Filter(must=must)
+
+
+def get_reranker():
+    global _reranker
+
+    if _reranker is None:
+        settings = get_settings()
+
+        Path(settings.rerank_cache_dir).mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        _reranker = TextCrossEncoder(
+            model_name="BAAI/bge-reranker-base",
+            cache_dir=settings.rerank_cache_dir,
+        )
+
+    return _reranker
+
+
+def rerank(query: str, results: list, final_k: int, threshold: float) -> list:
+    if not results:
+        return []
+
+    documents = [item.payload.get("content", "") for item in results]
+    
+    reranker = get_reranker()
+    
+    scores = list(
+        reranker.rerank(
+            query=query,
+            documents=documents,
+        )
+    )
+
+    ranked = sorted(
+        zip(results, scores),
+        key=lambda item: item[1],
+        reverse=True,
+    )
+
+    # Фильтр слабых результатов
+    filtered = [item for item in ranked if item[1] > threshold]
+
+    final = filtered[:final_k] if filtered else ranked[:final_k]
+
+    return [item[0] for item in final]
 
 
 @mcp.tool
@@ -62,7 +115,10 @@ def search_project_docs(
     client = get_qdrant_client()
     vector = embed_text(query)
 
-    results = client.query_points(
+    retrieval_k = max(settings.retrieval_top_k, top_k)
+    rerank_k = min(settings.rerank_top_k, top_k)
+
+    raw_results = client.query_points(
         collection_name=settings.docs_collection,
         query=vector,
         query_filter=project_filter(
@@ -70,9 +126,26 @@ def search_project_docs(
             knowledge_type="docs",
             include_global=include_global,
         ),
-        limit=top_k,
+        limit=retrieval_k,
         with_payload=True,
     ).points
+
+    if settings.enable_rerank:
+        results = rerank(
+            query=query,
+            results=raw_results,
+            final_k=rerank_k,
+            threshold=settings.rerank_threshold,
+        )
+    else:
+        results = raw_results[:top_k]
+
+    print(
+        f"[RAG] rerank enabled={settings.enable_rerank}, "
+        f"retrieval_k={retrieval_k}, "
+        f"rerank_k={rerank_k}, "
+        f"threshold={settings.rerank_threshold}"
+    )
 
     return [
         {
@@ -81,6 +154,10 @@ def search_project_docs(
             "source_path": item.payload.get("source_path"),
             "language": item.payload.get("language"),
             "module": item.payload.get("module"),
+            "heading_path": item.payload.get("heading_path"),
+            "chunk_type": item.payload.get("chunk_type"),
+            "start_line": item.payload.get("start_line"),
+            "end_line": item.payload.get("end_line"),
             "content": item.payload.get("content"),
         }
         for item in results

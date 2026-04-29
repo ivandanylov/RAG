@@ -48,6 +48,7 @@ config/secrets/
 
 # Qdrant/local persistent data
 data/qdrant/
+.cache/
 data/
 raft_state.json
 

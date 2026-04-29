@@ -5,11 +5,12 @@ import fnmatch
 import hashlib
 
 from pathlib import Path
+from pydoc import text
 from uuid import uuid4
 
 from qdrant_client.models import FieldCondition, Filter, MatchValue, PointStruct
 
-from local_dev_rag.chunking import chunk_code, chunk_docs, detect_language, module_from_path
+from local_dev_rag.chunking import chunk_code, chunk_docs, chunk_markdown_by_headings, detect_language, module_from_path
 from local_dev_rag.embeddings import embed_text
 from local_dev_rag.qdrant_admin import get_qdrant_client
 from local_dev_rag.settings import RagProject, get_project, get_settings, load_projects
@@ -98,7 +99,14 @@ def index_file(project: RagProject, path: Path, knowledge_type: str) -> None:
 
     delete_file_chunks(collection_name, project.project_id, source_path)
 
-    chunks = chunk_docs(text) if knowledge_type == "docs" else chunk_code(text)
+    if knowledge_type == "docs":
+        chunks = chunk_markdown_by_headings(text)
+
+    # fallback if file is not markdown or poorly parsed
+    if not chunks:
+        chunks = chunk_docs(text)
+    else:
+        chunks = chunk_code(text)
     client = get_qdrant_client()
 
     points = []
@@ -123,6 +131,8 @@ def index_file(project: RagProject, path: Path, knowledge_type: str) -> None:
                     "module": module_from_path(path),
                     "start_line": chunk.get("start_line"),
                     "end_line": chunk.get("end_line"),
+                    "heading_path": chunk.get("heading_path"),
+                    "chunk_type": chunk.get("chunk_type"),
                     "content": content,
                     "content_hash": content_hash,
                     "tags": project.tags,

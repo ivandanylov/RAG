@@ -10,7 +10,7 @@ if [[ "$CONFIRM" != "DELETE" ]]; then
 fi
 
 docker compose down
-rm -rf data/qdrant
+sudo rm -rf data/qdrant
 docker compose up -d
 uv run python -m local_dev_rag.qdrant_admin
 

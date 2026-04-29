@@ -31,6 +31,49 @@ def test_mcp_docs_search(test_project_id):
     assert "content" in first
 
 
+def test_rerank_returns_results(test_project_id):
+    results = search_project_docs(
+        query="refresh tokens authentication",
+        project_id=test_project_id,
+        top_k=5,
+    )
+
+    assert results
+    assert all("content" in r for r in results)
+
+
+def test_rerank_relevance(test_project_id):
+    results = search_project_docs(
+        query="refresh token cookie httponly",
+        project_id=test_project_id,
+        top_k=3,
+    )
+
+    texts = [r["content"].lower() for r in results]
+
+    assert any("refresh token" in t for t in texts)
+
+
+def test_rerank_configurable_threshold(test_project_id, monkeypatch):
+    monkeypatch.setenv("ENABLE_RERANK", "true")
+    monkeypatch.setenv("RERANK_THRESHOLD", "0.5")
+    monkeypatch.setenv("RETRIEVAL_TOP_K", "50")
+    monkeypatch.setenv("RERANK_TOP_K", "3")
+
+    results = search_project_docs(
+        query="refresh token httponly cookie",
+        project_id=test_project_id,
+        top_k=3,
+    )
+
+    assert isinstance(results, list)
+    assert results
+    assert any(
+        "ADR-004-jwt-authentication.md" in r["source_path"]
+        for r in results
+    )
+
+
 @pytest.mark.code
 def test_mcp_code_search(test_project_id):
     results = search_project_code(
