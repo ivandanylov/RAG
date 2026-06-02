@@ -101,10 +101,9 @@ def index_file(project: RagProject, path: Path, knowledge_type: str) -> None:
 
     if knowledge_type == "docs":
         chunks = chunk_markdown_by_headings(text)
-
-    # fallback if file is not markdown or poorly parsed
-    if not chunks:
-        chunks = chunk_docs(text)
+        # Fallback for non-markdown docs or weak heading structure.
+        if not chunks:
+            chunks = chunk_docs(text)
     else:
         chunks = chunk_code(text)
     client = get_qdrant_client()
