@@ -23,6 +23,8 @@ projects:
         - "**/.git/**"
     code:
       include:
+        - backend/**/*.py
+        - backend/**/*.sql
         - apps/**/*.py
         - apps/**/*.ts
         - apps/**/*.tsx

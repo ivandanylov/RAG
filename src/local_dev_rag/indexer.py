@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import hashlib
+import re
 
 from pathlib import Path
-from pydoc import text
 from uuid import uuid4
 
 from qdrant_client.models import FieldCondition, Filter, MatchValue, PointStruct
@@ -16,8 +16,30 @@ from local_dev_rag.qdrant_admin import get_qdrant_client
 from local_dev_rag.settings import RagProject, get_project, get_settings, load_projects
 
 
+INDEX_FORMAT_VERSION = "2"
+FORBIDDEN_CONTENT_FRAGMENTS = (
+    ".env",
+    "BEGIN RSA PRIVATE KEY",
+    "BEGIN OPENSSH PRIVATE KEY",
+    "password=",
+    "secret=",
+    "api_key=",
+    "access_token=",
+)
+
+
 def sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def redact_forbidden_content(text: str) -> str:
+    redacted = text
+
+    for fragment in FORBIDDEN_CONTENT_FRAGMENTS:
+        pattern = re.compile(re.escape(fragment), re.IGNORECASE)
+        redacted = pattern.sub("[redacted]", redacted)
+
+    return redacted
 
 
 def matches_any(relative_path: str, patterns: list[str]) -> bool:
@@ -91,7 +113,9 @@ def index_file(project: RagProject, path: Path, knowledge_type: str) -> None:
         return
 
     text = path.read_text(encoding="utf-8", errors="ignore")
-    content_hash = sha256(text)
+    sanitized_text = redact_forbidden_content(text)
+    # Include an explicit version marker so indexing rule changes trigger refresh.
+    content_hash = sha256(f"{INDEX_FORMAT_VERSION}\n{sanitized_text}")
 
     if existing_hash(collection_name, project.project_id, source_path) == content_hash:
         print(f"skip unchanged: {project.project_id}:{source_path}")
@@ -100,12 +124,12 @@ def index_file(project: RagProject, path: Path, knowledge_type: str) -> None:
     delete_file_chunks(collection_name, project.project_id, source_path)
 
     if knowledge_type == "docs":
-        chunks = chunk_markdown_by_headings(text)
+        chunks = chunk_markdown_by_headings(sanitized_text)
         # Fallback for non-markdown docs or weak heading structure.
         if not chunks:
-            chunks = chunk_docs(text)
+            chunks = chunk_docs(sanitized_text)
     else:
-        chunks = chunk_code(text)
+        chunks = chunk_code(sanitized_text)
     client = get_qdrant_client()
 
     points = []
