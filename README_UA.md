@@ -244,7 +244,7 @@ docker compose up -d
 # Завантажте модель: text-embedding-nomic-embed-text-v1.5
 
 # 3. Перевірити відповідь LM Studio
-curl http://localhost:1234/v1/models
+curl http://localhost:1234/v1/models -H "Authorization: Bearer $EMBEDDING_API_KEY"
 
 # 4. Створити колекції Qdrant (ідемпотентна операція)
 uv run python -m local_dev_rag.qdrant_admin
@@ -355,7 +355,7 @@ curl http://localhost:6333/collections -H "api-key: $QDRANT_API_KEY"
 ### Перевірка LM Studio
 
 ```bash
-curl http://localhost:1234/v1/models
+curl http://localhost:1234/v1/models -H "Authorization: Bearer $EMBEDDING_API_KEY"
 ```
 
 Очікується: модель ембедингів присутня у відповіді.
@@ -565,7 +565,7 @@ RERANK_CACHE_DIR=.cache/fastembed
 
 **Причина:** LM Studio Local Server не запущений.  
 **Рішення:** LM Studio → Developer / Local Server → Start Server.  
-**Перевірка:** `curl http://localhost:1234/v1/models`
+**Перевірка:** `curl http://localhost:1234/v1/models -H "Authorization: Bearer $EMBEDDING_API_KEY"`
 
 ### Continue: модель не завантажена
 

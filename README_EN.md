@@ -244,7 +244,7 @@ docker compose up -d
 # Load model: text-embedding-nomic-embed-text-v1.5
 
 # 3. Verify LM Studio is responding
-curl http://localhost:1234/v1/models
+curl http://localhost:1234/v1/models -H "Authorization: Bearer $EMBEDDING_API_KEY"
 
 # 4. Create Qdrant collections (idempotent)
 uv run python -m local_dev_rag.qdrant_admin
@@ -355,7 +355,7 @@ Expected: both `rag_docs_knowledge` and `rag_code_knowledge` are listed.
 ### Check LM Studio
 
 ```bash
-curl http://localhost:1234/v1/models
+curl http://localhost:1234/v1/models -H "Authorization: Bearer $EMBEDDING_API_KEY"
 ```
 
 Expected: the embedding model is listed in the response.
@@ -562,7 +562,7 @@ ENABLE_RERANK=false
 
 **Cause:** LM Studio Local Server is not running.  
 **Fix:** LM Studio → Developer / Local Server → Start Server.  
-**Verify:** `curl http://localhost:1234/v1/models`
+**Verify:** `curl http://localhost:1234/v1/models -H "Authorization: Bearer $EMBEDDING_API_KEY"`
 
 ### Continue: Model is unloaded
 
