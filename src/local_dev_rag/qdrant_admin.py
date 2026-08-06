@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import atexit
+import sys
 import threading
 
 from qdrant_client import QdrantClient
@@ -12,6 +13,10 @@ from local_dev_rag.settings import get_settings
 
 _qdrant_client: QdrantClient | None = None
 _qdrant_client_lock = threading.Lock()
+
+
+class EmbeddingServiceUnavailableError(RuntimeError):
+    """Raised when embedding service is required but not reachable."""
 
 
 def _close_qdrant_client() -> None:
@@ -52,13 +57,26 @@ def get_qdrant_client() -> QdrantClient:
 def ensure_collections() -> None:
     settings = get_settings()
     client = get_qdrant_client()
-    size = get_embedding_dimension()
 
     existing = {c.name for c in client.get_collections().collections}
+    missing_collections = [
+        collection_name
+        for collection_name in [settings.docs_collection, settings.code_collection]
+        if collection_name not in existing
+    ]
 
-    for collection_name in [settings.docs_collection, settings.code_collection]:
-        if collection_name in existing:
-            continue
+    if not missing_collections:
+        return
+
+    try:
+        size = get_embedding_dimension()
+    except Exception as exc:
+        raise EmbeddingServiceUnavailableError(
+            "LLM embedding service is not available. "
+            "Start LM Studio Local Server and ensure an embedding model is loaded."
+        ) from exc
+
+    for collection_name in missing_collections:
 
         client.create_collection(
             collection_name=collection_name,
@@ -88,4 +106,8 @@ def ensure_collections() -> None:
 
 
 if __name__ == "__main__":
-    ensure_collections()
+    try:
+        ensure_collections()
+    except EmbeddingServiceUnavailableError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
