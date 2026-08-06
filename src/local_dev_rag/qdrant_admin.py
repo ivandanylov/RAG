@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import atexit
+import threading
+
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, HnswConfigDiff, VectorParams
 
@@ -7,12 +10,43 @@ from local_dev_rag.embeddings import get_embedding_dimension
 from local_dev_rag.settings import get_settings
 
 
+_qdrant_client: QdrantClient | None = None
+_qdrant_client_lock = threading.Lock()
+
+
+def _close_qdrant_client() -> None:
+    global _qdrant_client
+
+    if _qdrant_client is None:
+        return
+
+    try:
+        _qdrant_client.close()
+    except Exception:
+        pass
+
+    _qdrant_client = None
+
+
+atexit.register(_close_qdrant_client)
+
+
 def get_qdrant_client() -> QdrantClient:
+    global _qdrant_client
+
+    if _qdrant_client is not None:
+        return _qdrant_client
+
     settings = get_settings()
-    return QdrantClient(
-        url=settings.qdrant_url,
-        api_key=settings.qdrant_api_key,
-    )
+
+    with _qdrant_client_lock:
+        if _qdrant_client is None:
+            _qdrant_client = QdrantClient(
+                url=settings.qdrant_url,
+                api_key=settings.qdrant_api_key,
+            )
+
+    return _qdrant_client
 
 
 def ensure_collections() -> None:
