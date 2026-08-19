@@ -79,21 +79,25 @@ def main() -> None:
     for root in roots:
         print(f"watching: {root}")
 
-    for changes in watch(*roots, debounce=1500, step=300, recursive=True):
-        for change_type, raw_path in changes:
-            if change_type not in {Change.added, Change.modified, Change.deleted}:
-                continue
-
-            path = Path(raw_path).resolve()
-
-            for project in projects:
-                root = project.workspace_path.resolve()
-                if root not in path.parents and path != root:
+    try:
+        for changes in watch(*roots, debounce=1500, step=300, recursive=True):
+            for change_type, raw_path in changes:
+                if change_type not in {Change.added, Change.modified, Change.deleted}:
                     continue
 
-                knowledge_type = classify(project, path)
-                if knowledge_type:
-                    enqueue(project, path, knowledge_type)
+                path = Path(raw_path).resolve()
+
+                for project in projects:
+                    root = project.workspace_path.resolve()
+                    if root not in path.parents and path != root:
+                        continue
+
+                    knowledge_type = classify(project, path)
+                    if knowledge_type:
+                        enqueue(project, path, knowledge_type)
+    except KeyboardInterrupt:
+        print("Stopping watcher")
+        return
 
 
 if __name__ == "__main__":
